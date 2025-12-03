@@ -41,6 +41,13 @@ agentgear create-token --project <project_id>
 ```
 Copy the token (shown once). Use it in SDK calls via `X-AgentGear-Key`.
 
+### 5) Forgot the password?
+- Set env vars, restart the server, and sign in with the override:
+  - `export AGENTGEAR_ADMIN_USERNAME=admin`
+  - `export AGENTGEAR_ADMIN_PASSWORD=change-me`
+  - `agentgear ui`
+- Clear the env vars afterward if you want to go back to the stored admin user.
+
 ---
 
 ## SDK Usage
@@ -127,8 +134,9 @@ resp = instrumented.chat.completions.create(model="gpt-4o", messages=[{"role":"u
 ### Auth
 - Header: `X-AgentGear-Key: <token>`
 - Scopes (examples): `runs.write`, `prompts.read`, `prompts.write`, `tokens.manage`
-- Admin dashboard login: first visit prompts you to set username/password. If you forget, set `AGENTGEAR_ADMIN_USERNAME` and `AGENTGEAR_ADMIN_PASSWORD` to override.
-- Local mode (`AGENTGEAR_LOCAL_MODE=true`) bypasses token enforcement for dev.
+- Dashboard login: first visit prompts you to set an admin username/password.
+- Password reset: set `AGENTGEAR_ADMIN_USERNAME` and `AGENTGEAR_ADMIN_PASSWORD`, restart, sign in, then clear the env vars if you want to go back to the stored admin user.
+- Local mode (`AGENTGEAR_LOCAL_MODE=true`) bypasses auth for dev; keep it `false` in any shared or remote environment.
 
 ### Key endpoints
 - `POST /api/projects`, `GET /api/projects`, `GET /api/projects/{id}`
@@ -153,6 +161,8 @@ resp = instrumented.chat.completions.create(model="gpt-4o", messages=[{"role":"u
 ---
 
 ## Dashboard (React + Vite + Tailwind)
+- Packaged build is bundled with the PyPI wheel and served from `/` when you run `agentgear ui`.
+- For local UI tweaks, use the dev server (below); production installs can skip Node entirely.
 - `/projects`: list + create projects
 - `/projects/:id`: overview (stats, prompts, runs, tokens)
 - `/projects/:id/tokens`: create/revoke tokens (shows raw token once)
