@@ -22,7 +22,7 @@ def create_prompt(
     project = db.query(Project).filter(Project.id == payload.project_id).first()
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
-    if not settings.local_mode and request and request.state.project and request.state.project.id != project.id:
+    if not settings.local_mode and request and request.state.project_id and request.state.project_id != project.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Project mismatch")
 
     prompt = Prompt(project_id=payload.project_id, name=payload.name, description=payload.description)
@@ -70,7 +70,7 @@ def create_prompt_version(
     prompt = db.query(Prompt).filter(Prompt.id == prompt_id).first()
     if not prompt:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Prompt not found")
-    if not settings.local_mode and request and request.state.project and request.state.project.id != prompt.project_id:
+    if not settings.local_mode and request and request.state.project_id and request.state.project_id != prompt.project_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Project mismatch")
 
     latest_version = (

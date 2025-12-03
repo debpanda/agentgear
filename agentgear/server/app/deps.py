@@ -12,8 +12,11 @@ def require_project(
     request: Request, db: Session = Depends(get_db), project_id: Optional[str] = None
 ) -> Project:
     settings = get_settings()
-    if getattr(request.state, "project", None):
-        project: Project = request.state.project
+    state_project_id = getattr(request.state, "project_id", None)
+    if state_project_id:
+        project = db.query(Project).filter(Project.id == state_project_id).first()
+        if not project:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Project not found")
         if project_id and project.id != project_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Project mismatch")
         return project

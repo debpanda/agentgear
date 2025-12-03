@@ -42,7 +42,7 @@ class TokenAuthMiddleware(BaseHTTPMiddleware):
             return response
 
         token_value = request.headers.get(HEADER_NAME)
-        request.state.project = None
+        request.state.project_id = None
         request.state.token_scopes = []
 
         if not token_value:
@@ -69,7 +69,7 @@ class TokenAuthMiddleware(BaseHTTPMiddleware):
             api_key.last_used_at = datetime.utcnow()
             db.add(api_key)
             db.commit()
-            request.state.project = project
+            request.state.project_id = project.id
             request.state.token_scopes = api_key.scopes or []
         finally:
             db.close()
