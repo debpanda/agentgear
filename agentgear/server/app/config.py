@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="AGENTGEAR_", env_file=".env", env_file_encoding="utf-8")
 
-    database_url: str = "sqlite:///./agentgear.db"
+    database_url: str = "sqlite:///~/.agentgear/agentgear.db"
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     secret_key: str = "agentgear-dev-secret"
@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
 
 class VersionInfo(BaseModel):
-    version: str = "0.1.5"
+    version: str = "0.1.6"
     name: str = "AgentGear"
 
 

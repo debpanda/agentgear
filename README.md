@@ -34,6 +34,7 @@ pip install agentgear-ai
 ```bash
 agentgear init-db
 ```
+> Default SQLite file lives at `~/.agentgear/agentgear.db`. Set `AGENTGEAR_DATABASE_URL` to override (absolute path recommended).
 
 ### 3) Launch API + dashboard (served from the Python package)
 ```bash
@@ -188,7 +189,7 @@ with trace(client, run_id=run["id"], name="generate", parent_id=span.span_id) as
 ### Configuration (env)
 | Var | Default | Description |
 | --- | --- | --- |
-| `AGENTGEAR_DATABASE_URL` | `sqlite:///./agentgear.db` | DB connection (Postgres e.g. `postgresql+psycopg://user:pass@host/db`) |
+| `AGENTGEAR_DATABASE_URL` | `sqlite:///~/.agentgear/agentgear.db` | DB connection (absolute path recommended; Postgres e.g. `postgresql+psycopg://user:pass@host/db`) |
 | `AGENTGEAR_API_HOST` | `0.0.0.0` | Bind host |
 | `AGENTGEAR_API_PORT` | `8000` | Bind port |
 | `AGENTGEAR_SECRET_KEY` | `agentgear-dev-secret` | Signing/crypto secret |
