@@ -1,7 +1,7 @@
 # AgentGear
 
 <p align="center">
-  <img src="docs/assets/agentgear-logo.svg" alt="AgentGear logo" width="220" />
+  <img src="https://raw.githubusercontent.com/debpanda/agentgear/main/docs/assets/agentgear-logo.svg" alt="AgentGear logo" width="220" />
 </p>
 
 AgentGear is an open-source, cloud-ready observability and prompt management platform for LLM-powered agents. It ships a Python SDK, FastAPI backend, React + Vite dashboard, and Typer CLI so you can log prompts, runs, spans, costs, and latency across modern frameworks (OpenAI Agent SDK, Google ADK, LangChain, LlamaIndex, LiteLLM, custom Python).
