@@ -37,7 +37,8 @@ def create_app() -> FastAPI:
     def health():
         return {"status": "ok", "version": VersionInfo().version}
 
-    static_dir = Path(__file__).parent / "static"
+    # Serve bundled React build (emitted to agentgear/server/static)
+    static_dir = Path(__file__).parent.parent / "static"
     assets_dir = static_dir / "assets"
     if assets_dir.exists():
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
