@@ -6,6 +6,7 @@ import typer
 from agentgear.server.app.auth import generate_token
 from agentgear.server.app.config import get_settings
 from agentgear.server.app.db import Base, SessionLocal, engine
+from agentgear.server.app.migrations import apply_migrations
 from agentgear.server.app.models import APIKey, Project, Prompt, PromptVersion, Run
 
 app = typer.Typer(help="AgentGear CLI")
@@ -15,6 +16,7 @@ app = typer.Typer(help="AgentGear CLI")
 def init_db():
     """Initialize database tables."""
     Base.metadata.create_all(bind=engine)
+    apply_migrations(engine)
     typer.echo("Database initialized.")
 
 

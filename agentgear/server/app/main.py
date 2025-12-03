@@ -9,11 +9,13 @@ from agentgear.server.app.api import auth, metrics, projects, prompts, runs, spa
 from agentgear.server.app.auth import TokenAuthMiddleware
 from agentgear.server.app.config import VersionInfo, get_settings
 from agentgear.server.app.db import Base, engine
+from agentgear.server.app.migrations import apply_migrations
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
     Base.metadata.create_all(bind=engine)
+    apply_migrations(engine)
 
     app = FastAPI(title="AgentGear", version=VersionInfo().version)
     app.add_middleware(TokenAuthMiddleware)
