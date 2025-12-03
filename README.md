@@ -8,11 +8,20 @@ AgentGear is an open-source, cloud-ready observability and prompt management pla
 
 ---
 
+## Use Cases
+- **LLM observability**: capture runs, spans, errors, latency, and token/cost metrics for pipelines and agents.
+- **Prompt registry & versioning**: track prompt versions, metadata, and link runs back to prompt versions.
+- **Cost/latency budgeting**: monitor token usage and latency per run/prompt; export metrics via API.
+- **Multi-project isolation**: issue scoped API tokens per project for SDKs and CI.
+- **Self-hosted UI**: packaged React dashboard served by FastAPI (no Node required in production); use Node only if you want to develop the UI.
+
+---
+
 ## Quick Start
 
 ### Prerequisites
 - Python 3.10+
-- Node 18+ (with npm/pnpm/yarn)
+- Node 18+ (with npm/pnpm/yarn) — only needed if you want to hack on the UI locally; production install uses the bundled build
 - SQLite (default) or Postgres (for cloud)
 
 ### 1) Install SDK
@@ -24,12 +33,11 @@ pip install agentgear-ai
 ### 2) Initialize backend (SQLite dev)
 ```bash
 agentgear init-db
-agentgear ui  # starts FastAPI via uvicorn --reload on :8000
 ```
 
-### 3) Launch dashboard (served from the Python package)
+### 3) Launch API + dashboard (served from the Python package)
 ```bash
-agentgear ui  # serves API + packaged React dashboard on :8000
+agentgear ui  # FastAPI + packaged React dashboard on :8000
 # open http://localhost:8000
 # first visit prompts you to set an admin username/password
 ```
@@ -120,6 +128,37 @@ instrumented = instrument_openai_chat(raw_client, agentgear=client, model="gpt-4
 resp = instrumented.chat.completions.create(model="gpt-4o", messages=[{"role":"user","content":"Hello"}])
 ```
 
+### End-to-end example (log run + spans + prompt link)
+```python
+from agentgear import AgentGearClient, trace
+
+client = AgentGearClient(
+    base_url="http://localhost:8000",
+    api_key="ag_live_...",          # from CLI token creation
+    project_id="proj_123",
+)
+
+# Register a prompt (keeps version history)
+prompt = client.register_prompt(name="retrieval-chat", content="Answer using {context}")
+pv = client.create_prompt_version(prompt_id=prompt["id"], content="Answer using {context}. Be concise.")
+
+# Log a run and nested spans
+run = client.log_run(
+    name="qa-flow",
+    input_text="What is AgentGear?",
+    prompt_version_id=pv["id"],
+    token_usage={"prompt": 150, "completion": 120},
+)
+
+with trace(client, run_id=run["id"], name="retrieve") as span:
+    # do retrieval...
+    pass
+
+with trace(client, run_id=run["id"], name="generate", parent_id=span.span_id) as _:
+    # call model...
+    pass
+```
+
 ---
 
 ## Backend (FastAPI)
@@ -180,6 +219,12 @@ npm run dev
 # export VITE_AGENTGEAR_API=http://localhost:8000
 ```
 > Production installs get the built dashboard bundled inside the Python package and served from `/` when you run `agentgear ui`.
+
+### Common UI flows
+- Sign in (or complete first-time admin setup) at `/`.
+- Create a project and issue an API token from the Tokens tab (token shown once).
+- Browse runs/spans with latency and cost, filter by project.
+- Manage prompts and versions, and see which runs reference each prompt version.
 
 ---
 
