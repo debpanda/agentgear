@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
 
 class VersionInfo(BaseModel):
-    version: str = "0.1.7"
+    version: str = "0.1.8"
     name: str = "AgentGear"
 
 
