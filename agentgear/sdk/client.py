@@ -140,7 +140,7 @@ class AgentGearClient:
                 cost=payload.get("cost"),
                 latency_ms=payload.get("latency_ms"),
                 error=payload.get("error"),
-                metadata=payload.get("metadata"),
+                metadata_=payload.get("metadata"),
             )
             db.add(run)
             db.commit()
@@ -157,7 +157,7 @@ class AgentGearClient:
                 "cost": run.cost,
                 "latency_ms": run.latency_ms,
                 "error": run.error,
-                "metadata": run.metadata,
+                "metadata": run.metadata_,
                 "created_at": run.created_at.isoformat(),
             }
         finally:
@@ -190,7 +190,7 @@ class AgentGearClient:
                 start_time=start_time or None,
                 end_time=end_time or None,
                 latency_ms=payload.get("latency_ms"),
-                metadata=payload.get("metadata"),
+                metadata_=payload.get("metadata"),
             )
             db.add(span)
             db.commit()
@@ -204,7 +204,7 @@ class AgentGearClient:
                 "start_time": span.start_time.isoformat(),
                 "end_time": span.end_time.isoformat() if span.end_time else None,
                 "latency_ms": span.latency_ms,
-                "metadata": span.metadata,
+                "metadata": span.metadata_,
             }
         finally:
             db.close()
@@ -224,7 +224,7 @@ class AgentGearClient:
                 prompt_id=prompt.id,
                 version=1,
                 content=payload["content"],
-                metadata=payload.get("metadata"),
+                metadata_=payload.get("metadata"),
             )
             db.add(version)
             db.commit()
@@ -249,7 +249,7 @@ class AgentGearClient:
                 prompt_id=prompt_id,
                 version=next_version,
                 content=payload["content"],
-                metadata=payload.get("metadata"),
+                metadata_=payload.get("metadata"),
             )
             db.add(version)
             db.commit()
@@ -259,7 +259,7 @@ class AgentGearClient:
                 "prompt_id": version.prompt_id,
                 "version": version.version,
                 "content": version.content,
-                "metadata": version.metadata,
+                "metadata": version.metadata_,
                 "created_at": version.created_at.isoformat(),
             }
         finally:

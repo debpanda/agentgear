@@ -31,7 +31,7 @@ def create_prompt(
     db.refresh(prompt)
 
     version = PromptVersion(
-        prompt_id=prompt.id, version=1, content=payload.content, metadata=payload.metadata
+        prompt_id=prompt.id, version=1, content=payload.content, metadata_=payload.metadata
     )
     db.add(version)
     db.commit()
@@ -81,7 +81,7 @@ def create_prompt_version(
         prompt_id=prompt_id,
         version=latest_version + 1,
         content=payload.content,
-        metadata=payload.metadata,
+        metadata_=payload.metadata,
     )
     db.add(version)
     db.commit()

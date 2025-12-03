@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 class ORMModel(BaseModel):
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 
 class ProjectCreate(BaseModel):
@@ -66,7 +67,7 @@ class PromptVersionRead(ORMModel):
     prompt_id: str
     version: int
     content: str
-    metadata: Optional[dict[str, Any]] = None
+    metadata: Optional[dict[str, Any]] = Field(default=None, alias="metadata_")
     created_at: datetime
 
 
@@ -101,7 +102,7 @@ class RunRead(ORMModel):
     cost: Optional[float]
     latency_ms: Optional[float]
     error: Optional[str]
-    metadata: Optional[dict[str, Any]]
+    metadata: Optional[dict[str, Any]] = Field(default=None, alias="metadata_")
     created_at: datetime
 
 
@@ -125,7 +126,7 @@ class SpanRead(ORMModel):
     start_time: datetime
     end_time: Optional[datetime]
     latency_ms: Optional[float]
-    metadata: Optional[dict[str, Any]]
+    metadata: Optional[dict[str, Any]] = Field(default=None, alias="metadata_")
 
 
 class MetricsSummary(BaseModel):

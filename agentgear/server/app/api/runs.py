@@ -47,7 +47,7 @@ def create_run(
         cost=payload.cost,
         latency_ms=payload.latency_ms,
         error=payload.error,
-        metadata=payload.metadata,
+        metadata_=payload.metadata,
     )
     db.add(run)
     db.commit()

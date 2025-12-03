@@ -36,7 +36,7 @@ def create_span(
         start_time=payload.start_time or run.created_at,
         end_time=payload.end_time,
         latency_ms=payload.latency_ms,
-        metadata=payload.metadata,
+        metadata_=payload.metadata,
     )
     db.add(span)
     db.commit()

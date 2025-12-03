@@ -69,7 +69,7 @@ class PromptVersion(Base):
     prompt_id = Column(String, ForeignKey("prompts.id"), nullable=False, index=True)
     version = Column(Integer, nullable=False)
     content = Column(Text, nullable=False)
-    metadata = Column(JSON, nullable=True)
+    metadata_ = Column("metadata", JSON, nullable=True)  # "metadata" attribute name is reserved
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     prompt = relationship("Prompt", back_populates="versions")
@@ -89,7 +89,7 @@ class Run(Base):
     cost = Column(Float, nullable=True)
     latency_ms = Column(Float, nullable=True)
     error = Column(Text, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    metadata_ = Column("metadata", JSON, nullable=True)  # "metadata" attribute name is reserved
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     project = relationship("Project", back_populates="runs")
@@ -108,7 +108,7 @@ class Span(Base):
     start_time = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     end_time = Column(DateTime(timezone=True), nullable=True)
     latency_ms = Column(Float, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    metadata_ = Column("metadata", JSON, nullable=True)  # "metadata" attribute name is reserved
 
     run = relationship("Run", back_populates="spans")
     parent = relationship("Span", remote_side=[id])
