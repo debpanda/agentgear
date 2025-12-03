@@ -17,8 +17,9 @@ AgentGear is an open-source, cloud-ready observability and prompt management pla
 
 ### 1) Install SDK
 ```bash
-pip install agentgear
+pip install agentgear-ai
 ```
+> Package name is `agentgear-ai`, import path remains `import agentgear`.
 
 ### 2) Initialize backend (SQLite dev)
 ```bash

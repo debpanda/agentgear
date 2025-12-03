@@ -3,8 +3,8 @@ requires = ["hatchling>=1.8"]
 build-backend = "hatchling.build"
 
 [project]
-name = "agentgear"
-version = "0.1.0"
+name = "agentgear-ai"
+version = "0.1.1"
 description = "AgentGear: LLM observability, prompt management, and agentic tracing platform with SDK, FastAPI backend, and dashboard."
 readme = "README.md"
 requires-python = ">=3.10"
