@@ -11,11 +11,13 @@ class Settings(BaseSettings):
     api_port: int = 8000
     secret_key: str = "agentgear-dev-secret"
     allow_origins: list[str] = ["*"]
-    local_mode: bool = True
+    local_mode: bool = False
+    admin_username: str | None = None
+    admin_password: str | None = None
 
 
 class VersionInfo(BaseModel):
-    version: str = "0.1.2"
+    version: str = "0.1.3"
     name: str = "AgentGear"
 
 

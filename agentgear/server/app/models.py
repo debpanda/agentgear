@@ -112,3 +112,13 @@ class Span(Base):
 
     run = relationship("Run", back_populates="spans")
     parent = relationship("Span", remote_side=[id])
+
+
+class AdminUser(Base):
+    __tablename__ = "admin_users"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    username = Column(String, unique=True, nullable=False, index=True)
+    password_hash = Column(String, nullable=False)
+    salt = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

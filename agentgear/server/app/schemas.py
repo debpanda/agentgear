@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Literal
 
 from pydantic import BaseModel, Field
 
@@ -134,3 +134,26 @@ class MetricsSummary(BaseModel):
     spans: int
     prompts: int
     projects: int
+
+
+class AuthStatus(BaseModel):
+    configured: bool
+    mode: Literal["none", "env", "db"]
+    username: Optional[str] = None
+    project_id: Optional[str] = None
+
+
+class AuthSetup(BaseModel):
+    username: str
+    password: str
+
+
+class AuthLogin(BaseModel):
+    username: str
+    password: str
+
+
+class AuthResponse(BaseModel):
+    token: str
+    project_id: str
+    username: str

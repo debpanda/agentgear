@@ -27,14 +27,14 @@ agentgear init-db
 agentgear ui  # starts FastAPI via uvicorn --reload on :8000
 ```
 
-### 3) Launch dashboard
+### 3) Launch dashboard (served from the Python package)
 ```bash
-cd frontend
-npm install
-npm run dev  # opens Vite dev server on :5173
+agentgear ui  # serves API + packaged React dashboard on :8000
+# open http://localhost:8000
+# first visit prompts you to set an admin username/password
 ```
 
-### 4) Create project + token
+### 4) Create project + token (from CLI)
 ```bash
 agentgear create-project --name "My Project"
 agentgear create-token --project <project_id>
@@ -127,6 +127,7 @@ resp = instrumented.chat.completions.create(model="gpt-4o", messages=[{"role":"u
 ### Auth
 - Header: `X-AgentGear-Key: <token>`
 - Scopes (examples): `runs.write`, `prompts.read`, `prompts.write`, `tokens.manage`
+- Admin dashboard login: first visit prompts you to set username/password. If you forget, set `AGENTGEAR_ADMIN_USERNAME` and `AGENTGEAR_ADMIN_PASSWORD` to override.
 - Local mode (`AGENTGEAR_LOCAL_MODE=true`) bypasses token enforcement for dev.
 
 ### Key endpoints
@@ -145,7 +146,9 @@ resp = instrumented.chat.completions.create(model="gpt-4o", messages=[{"role":"u
 | `AGENTGEAR_API_PORT` | `8000` | Bind port |
 | `AGENTGEAR_SECRET_KEY` | `agentgear-dev-secret` | Signing/crypto secret |
 | `AGENTGEAR_ALLOW_ORIGINS` | `*` | CORS allowlist |
-| `AGENTGEAR_LOCAL_MODE` | `true` | If true, bypasses auth (dev only) |
+| `AGENTGEAR_LOCAL_MODE` | `false` | If true, bypasses auth (dev only) |
+| `AGENTGEAR_ADMIN_USERNAME` | `None` | Optional: override admin login username (e.g. for reset) |
+| `AGENTGEAR_ADMIN_PASSWORD` | `None` | Optional: override admin login password (e.g. for reset) |
 
 ---
 
@@ -166,6 +169,7 @@ npm run dev
 # set API target if not localhost:
 # export VITE_AGENTGEAR_API=http://localhost:8000
 ```
+> Production installs get the built dashboard bundled inside the Python package and served from `/` when you run `agentgear ui`.
 
 ---
 

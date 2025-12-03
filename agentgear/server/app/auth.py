@@ -17,6 +17,10 @@ def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
+def hash_password(password: str, salt: str) -> str:
+    return hashlib.sha256(f"{salt}:{password}".encode("utf-8")).hexdigest()
+
+
 def generate_token() -> tuple[str, str]:
     raw = secrets.token_urlsafe(32)
     return raw, hash_token(raw)
@@ -28,6 +32,15 @@ class TokenAuthMiddleware(BaseHTTPMiddleware):
         self.settings = get_settings()
 
     async def dispatch(self, request: Request, call_next):
+        path = request.url.path
+        # Allow unauthenticated access for non-API routes and auth endpoints
+        if not path.startswith("/api") or path.startswith("/api/auth"):
+            response = await call_next(request)
+            return response
+        if self.settings.local_mode:
+            response = await call_next(request)
+            return response
+
         token_value = request.headers.get(HEADER_NAME)
         request.state.project = None
         request.state.token_scopes = []
