@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentgear-ai"
-version = "0.1.11"
+version = "0.1.12"
 description = "AgentGear: LLM observability, prompt management, and agentic tracing platform with SDK, FastAPI backend, and dashboard."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -57,9 +57,7 @@ agentgear = "agentgear.cli.main:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["agentgear"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"agentgear/server/static" = "agentgear/server/static"
+artifacts = ["agentgear/server/static"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
