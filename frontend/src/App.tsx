@@ -15,6 +15,7 @@ import { SettingsPage } from "./pages/Settings";
 import { AuthPage } from "./pages/Auth";
 import { DatasetsPage } from "./pages/Datasets";
 import { DatasetDetailPage } from "./pages/DatasetDetail";
+import { EvaluationsPage } from "./pages/Evaluations";
 import { useAuth } from "./lib/auth";
 
 const RequireAuth = ({ children }: { children: JSX.Element }) => {
@@ -145,6 +146,14 @@ function App() {
         element={
           <RequireAuth>
             <DatasetDetailPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/evaluators"
+        element={
+          <RequireAuth>
+            <EvaluationsPage />
           </RequireAuth>
         }
       />

@@ -45,6 +45,41 @@ def create_user(
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    # Try to send invite email
+    try:
+        if user.email:
+            from agentgear.server.app.models import SMTPSettings
+            from agentgear.server.app.utils.email import send_email
+            
+            # Fetch SMTP settings for this project (or globally if null project_id?)
+            # User might be created for specific project.
+            # If project_id is None (admin), we might look for a 'default' project or just skip?
+            # Or look for *any* SMTP config?
+            # Let's try to lookup by project_id first.
+            smtp = None
+            if payload.project_id:
+                smtp = db.query(SMTPSettings).filter(SMTPSettings.project_id == payload.project_id).first()
+            
+            # Fallback: Find *any* enabled SMTP config (e.g. from admin project) if not found?
+            if not smtp:
+                smtp = db.query(SMTPSettings).filter(SMTPSettings.enabled == True).first()
+            
+            if smtp and smtp.enabled:
+                subject = "Welcome to AgentGear"
+                html = f"""
+                <p>Hello {user.username},</p>
+                <p>You have been invited to AgentGear.</p>
+                <p><strong>Username:</strong> {user.username}</p>
+                <p><strong>Password:</strong> {payload.password}</p>
+                <p><a href="{request.base_url}">Login here</a></p>
+                """
+                send_email(smtp, [user.email], subject, html)
+    except Exception as e:
+        # Log but don't fail the request
+        import logging
+        logging.error(f"Failed to send invite email: {e}")
+
     return user
 
 

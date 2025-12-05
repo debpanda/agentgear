@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status, UploadFile, File
 from sqlalchemy.orm import Session
 
 from agentgear.server.app import schemas
@@ -20,11 +20,17 @@ def create_dataset(
 ):
     settings = get_settings()
     # RBAC check
-    if not settings.local_mode and request.state.project_id and request.state.project_id != payload.project_id:
+    pid = payload.project_id or request.state.project_id
+    if not pid:
+         # Fallback to default project if local mode or loose auth? 
+         # Ideally request.state.project_id is always set by auth middleware.
+         raise HTTPException(status_code=400, detail="Project ID required")
+
+    if not settings.local_mode and request.state.project_id and request.state.project_id != pid:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Project mismatch")
 
     dataset = Dataset(
-        project_id=payload.project_id,
+        project_id=pid,
         name=payload.name,
         description=payload.description,
         tags=payload.tags,
@@ -107,3 +113,73 @@ def delete_example(
     
     db.delete(example)
     db.commit()
+
+@router.post("/{dataset_id}/upload", status_code=201)
+async def upload_dataset_file(
+    dataset_id: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _: None = Depends(require_scopes(["datasets.write"])),
+):
+    dataset = db.query(Dataset).filter(Dataset.id == dataset_id).first()
+    if not dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+
+    content = await file.read()
+    filename = file.filename.lower()
+    
+    examples_to_add = []
+    
+    import csv
+    import json
+    import io
+
+    try:
+        if filename.endswith(".csv"):
+            # Expect header: input, output (optional)
+            text = content.decode("utf-8")
+            reader = csv.DictReader(io.StringIO(text))
+            for row in reader:
+                # Flexible column matching
+                input_text = row.get("input") or row.get("input_text") or row.get("prompt")
+                expected_output = row.get("output") or row.get("expected_output") or row.get("completion")
+                
+                if input_text:
+                    examples_to_add.append({
+                        "input_text": input_text,
+                        "expected_output": expected_output
+                    })
+                    
+        elif filename.endswith(".json"):
+            data = json.loads(content)
+            if isinstance(data, list):
+                for item in data:
+                    input_text = item.get("input") or item.get("input_text") or item.get("prompt")
+                    expected_output = item.get("output") or item.get("expected_output") or item.get("completion")
+                    if input_text:
+                        examples_to_add.append({
+                            "input_text": input_text,
+                            "expected_output": expected_output
+                        })
+        else:
+             raise HTTPException(status_code=400, detail="Unsupported file type. Use .csv or .json")
+             
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to parse file: {str(e)}")
+
+    if not examples_to_add:
+        return {"message": "No valid examples found", "count": 0}
+
+    # Bulk insert
+    objects = [
+        DatasetExample(
+            dataset_id=dataset_id, 
+            input_text=ex["input_text"], 
+            expected_output=ex.get("expected_output")
+        ) 
+        for ex in examples_to_add
+    ]
+    db.add_all(objects)
+    db.commit()
+    
+    return {"message": "Successfully uploaded examples", "count": len(objects)}

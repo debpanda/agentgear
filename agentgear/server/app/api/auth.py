@@ -26,7 +26,7 @@ def _ensure_default_project(db: Session) -> Project:
 
 def _issue_token(db: Session, project: Project, role: str = "user") -> str:
     raw, hashed = generate_token()
-    scopes = ["runs.write", "prompts.read", "prompts.write", "tokens.manage"]
+    scopes = ["runs.write", "prompts.read", "prompts.write", "tokens.manage", "datasets.read", "datasets.write", "evaluations.read", "evaluations.write"]
     record = APIKey(project_id=project.id, key_hash=hashed, scopes=scopes, role=role)
     db.add(record)
     db.commit()
@@ -101,3 +101,56 @@ def login(payload: schemas.AuthLogin, db: Session = Depends(get_db)):
             return _login_success(db, user.username, role=user.role, project_id=user.project_id)
 
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
+
+class ForgotPasswordRequest(schemas.BaseModel):
+    email: str
+
+@router.post("/forgot-password", status_code=status.HTTP_200_OK)
+def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    from agentgear.server.app.models import User, SMTPSettings
+    from agentgear.server.app.utils.email import send_email
+
+    # Find user
+    user = db.query(User).filter(User.email == payload.email).first()
+    if not user:
+        # Prevent enumeration? For internal tool maybe not critical.
+        # But let's be nice.
+        return {"message": "If an account with that email exists, a reset code has been sent."}
+
+    # Find SMTP config
+    # Try user's project first
+    smtp = None
+    if user.project_id:
+        smtp = db.query(SMTPSettings).filter(SMTPSettings.project_id == user.project_id).first()
+    
+    if not smtp or not smtp.enabled:
+        # Fallback to any enabled SMTP (e.g. global/admin)
+        smtp = db.query(SMTPSettings).filter(SMTPSettings.enabled == True).first()
+    
+    if not smtp:
+        raise HTTPException(status_code=500, detail="SMTP not configured. Contact admin.")
+
+    # Generate temp password
+    temp_pass = secrets.token_hex(4) # 8 chars
+    user.salt = secrets.token_hex(8)
+    user.password_hash = hash_password(temp_pass, user.salt)
+    db.add(user)
+    db.commit()
+
+    # Send Email
+    try:
+        subject = "AgentGear Password Reset"
+        html = f"""
+        <p>Hello {user.username},</p>
+        <p>Your password has been reset.</p>
+        <p><strong>New Password:</strong> {temp_pass}</p>
+        <p>Please login and change your password immediately.</p>
+        """
+        send_email(smtp, [user.email], subject, html)
+    except Exception as e:
+        import logging
+        logging.error(f"Failed to send reset email: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send email.")
+
+    return {"message": "Password reset email sent."}

@@ -46,6 +46,30 @@ export const RunDetailPage = () => {
   const [newScore, setNewScore] = useState("");
   const [newComment, setNewComment] = useState("");
 
+  // Evaluator State
+  const [showEvalModal, setShowEvalModal] = useState(false);
+  const [evaluators, setEvaluators] = useState<{ id: string, name: string }[]>([]);
+  const [selectedEvaluator, setSelectedEvaluator] = useState("");
+
+  const runEvaluator = async () => {
+    if (!selectedEvaluator || !id) return;
+    try {
+      await api.post(`/api/evaluators/${selectedEvaluator}/run`, { trace_id: id });
+      alert("Evaluation started!");
+      setShowEvalModal(false);
+      // Reload to show new score potentially?
+      load();
+    } catch (e) {
+      alert("Failed to run evaluator");
+    }
+  }
+
+  useEffect(() => {
+    if (showEvalModal) {
+      api.get("/api/evaluators").then(res => setEvaluators(res.data));
+    }
+  }, [showEvalModal]);
+
   const load = async () => {
     if (!id) return;
     const rRes = await api.get<Run>(`/api/runs/${id}`);
@@ -108,12 +132,20 @@ export const RunDetailPage = () => {
       <div className="mx-auto max-w-5xl">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-slate-900">Run Details</h1>
-          <button
-            onClick={() => setShowScoreModal(true)}
-            className="bg-brand-600 text-white px-3 py-1.5 rounded text-sm font-semibold hover:bg-brand-700"
-          >
-            Rate Run ⭐️
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowEvalModal(true)}
+              className="bg-purple-600 text-white px-3 py-1.5 rounded text-sm font-semibold hover:bg-purple-700"
+            >
+              Run Evaluator 🤖
+            </button>
+            <button
+              onClick={() => setShowScoreModal(true)}
+              className="bg-brand-600 text-white px-3 py-1.5 rounded text-sm font-semibold hover:bg-brand-700"
+            >
+              Rate Run ⭐️
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -249,6 +281,42 @@ export const RunDetailPage = () => {
                   className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
                 >
                   Submit Score
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Evaluator Modal */}
+        {showEvalModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
+              <h2 className="mb-4 text-lg font-semibold">Run Automated Evaluation</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Select Evaluator</label>
+                  <select
+                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                    value={selectedEvaluator}
+                    onChange={e => setSelectedEvaluator(e.target.value)}
+                  >
+                    <option value="">Select a template...</option>
+                    {evaluators.map(ev => <option key={ev.id} value={ev.id}>{ev.name}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowEvalModal(false)}
+                  className="rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={runEvaluator}
+                  disabled={!selectedEvaluator}
+                  className="rounded-md bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+                >
+                  Run Analysis
                 </button>
               </div>
             </div>

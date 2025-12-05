@@ -11,6 +11,18 @@ router = APIRouter(prefix="/api/settings", tags=["settings"])
 
 # --- ALERTS ---
 
+@router.get("/database")
+def get_database_config():
+    from agentgear.server.app.config import get_settings
+    settings = get_settings()
+    url = settings.database_url
+    # Sanitize password if present
+    import re
+    safe_url = re.sub(r":([^:@]+)@", ":****@", url)
+    return {"url": safe_url, "type": url.split(":")[0]}
+
+# --- ALERTS ---
+
 @router.get("/alerts", response_model=List[schemas.AlertRuleRead])
 def list_alerts(project_id: str, db: Session = Depends(get_db)):
     return db.query(AlertRule).filter(AlertRule.project_id == project_id).all()

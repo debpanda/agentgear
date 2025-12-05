@@ -72,3 +72,17 @@ def apply_migrations(engine: Engine) -> None:
 
         # APIKeys: add role
         _add_column_if_missing(conn, "api_keys", "role", "VARCHAR", cache)
+
+        # Evaluators
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS evaluators (
+                id VARCHAR PRIMARY KEY,
+                project_id VARCHAR NOT NULL,
+                name VARCHAR NOT NULL,
+                prompt_template TEXT NOT NULL,
+                model VARCHAR NOT NULL,
+                config JSON,
+                created_at DATETIME DEFAULT (datetime('now', 'localtime')) NOT NULL,
+                FOREIGN KEY(project_id) REFERENCES projects(id)
+            )
+        """))

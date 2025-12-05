@@ -2,12 +2,34 @@ import { FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, fetchAuthStatus, performLogin, performSetup } from "../lib/auth";
 import { Logo } from "../components/Logo";
+import { api } from "../lib/api";
 
 type Mode = "loading" | "setup" | "login";
 
 export const AuthPage = () => {
   const { login, ready } = useAuth();
   const [mode, setMode] = useState<Mode>("loading");
+  // ... existing state ...
+
+  // ... (skipping to the button) ...
+  <button
+    type="button"
+    className="hover:text-slate-700 underline decoration-slate-300 underline-offset-2"
+    onClick={async () => {
+      const email = prompt("Enter your email address to reset your password:");
+      if (email) {
+        try {
+          await api.post("/api/auth/forgot-password", { email });
+          alert("If an account exists, a reset email has been sent.");
+        } catch (e: any) {
+          const msg = e.response?.data?.detail || "Request failed";
+          alert("Error: " + msg);
+        }
+      }
+    }}
+  >
+    Forgot password?
+  </button>
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -114,9 +136,43 @@ export const AuthPage = () => {
                 {mode === "setup" ? "Create Account" : "Log In"}
               </button>
               <div className="text-center text-xs text-slate-500">
-                <a className="hover:text-slate-700" href="#">
+                <button
+                  type="button"
+                  className="hover:text-slate-700 underline decoration-slate-300 underline-offset-2"
+                  onClick={async () => {
+                    const email = prompt("Enter your email address to reset your password:");
+                    if (email) {
+                      try {
+                        // We need to import 'api' here or use fetch if simpler.
+                        // Actually 'api' is not imported in this file. 
+                        // Let's rely on fetch or import api.
+                        // Importing api from lib/api is better.
+                        // But I can't easily add import at top without another call.
+                        // Wait, performLogin uses axios internally probably?
+                        // Let's check imports.
+                        // Imports: { useAuth, fetchAuthStatus, performLogin, performSetup } 
+                        // I should add `api` to imports first or just use fetch.
+                        // Since I am editing this block, I can't touch imports at top easily in one go unless I use multi_replace.
+                        // I will use fetch for simplicity here to avoid breaking imports or multiple steps.
+                        const response = await fetch("/api/auth/forgot-password", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ email })
+                        });
+                        if (response.ok) {
+                          alert("If an account exists, a reset email has been sent.");
+                        } else {
+                          const d = await response.json();
+                          alert("Error: " + (d.detail || "Failed"));
+                        }
+                      } catch (e) {
+                        alert("Request failed");
+                      }
+                    }
+                  }}
+                >
                   Forgot password?
-                </a>
+                </button>
               </div>
               {mode === "setup" ? (
                 <p className="text-xs text-slate-500 text-center">

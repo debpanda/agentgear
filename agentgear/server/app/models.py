@@ -230,6 +230,20 @@ class Evaluation(Base):
     span = relationship("Span")
 
 
+class Evaluator(Base):
+    __tablename__ = "evaluators"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    project_id = Column(String, ForeignKey("projects.id"), nullable=False, index=True)
+    name = Column(String, nullable=False)
+    prompt_template = Column(Text, nullable=False)
+    model = Column(String, nullable=False)
+    config = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    project = relationship("Project")
+
+
 class Dataset(Base):
     __tablename__ = "datasets"
 

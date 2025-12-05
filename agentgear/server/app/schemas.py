@@ -269,7 +269,7 @@ class RoleRead(BaseModel):
 # --- NEW SCHEMAS FOR DATASETS & EVALUATIONS ---
 
 class DatasetCreate(BaseModel):
-    project_id: str
+    project_id: Optional[str] = None
     name: str
     description: Optional[str] = None
     tags: Optional[List[str]] = None
@@ -321,5 +321,23 @@ class EvaluationRead(ORMModel):
     passed: Optional[bool]
     comments: Optional[str]
     metadata: Optional[dict[str, Any]] = Field(default=None, alias="metadata_")
+    metadata: Optional[dict[str, Any]] = Field(default=None, alias="metadata_")
+    created_at: datetime
+
+
+class EvaluatorCreate(BaseModel):
+    project_id: Optional[str] = None
+    name: str
+    prompt_template: str
+    model: str
+    config: Optional[dict[str, Any]] = None
+
+class EvaluatorRead(ORMModel):
+    id: str
+    project_id: str
+    name: str
+    prompt_template: str
+    model: str
+    config: Optional[dict[str, Any]]
     created_at: datetime
 

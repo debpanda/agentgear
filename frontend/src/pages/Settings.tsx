@@ -5,6 +5,34 @@ import { useAuth } from "../lib/auth";
 
 type Tab = "general" | "email" | "alerts" | "roles";
 
+// --- GENERAL COMPONENT ---
+const DatabaseInfo = () => {
+    const [dbInfo, setDbInfo] = useState<{ url: string, type: string } | null>(null);
+    useEffect(() => {
+        api.get("/api/settings/database").then(res => setDbInfo(res.data));
+    }, []);
+
+    if (!dbInfo) return <div className="text-sm text-slate-400">Loading DB info...</div>;
+
+    return (
+        <div className="space-y-2">
+            <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase">Connection URL</label>
+                <code className="text-sm bg-slate-100 px-2 py-1 rounded block mt-1 break-all">
+                    {dbInfo.url}
+                </code>
+            </div>
+            <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase">Type</label>
+                <div className="text-sm text-slate-700 font-medium capitalize">{dbInfo.type}</div>
+            </div>
+            <div className="text-xs text-orange-600 mt-2 bg-orange-50 p-2 rounded">
+                To change the database, update the <code>AGENTGEAR_DATABASE_URL</code> environment variable and restart the server.
+            </div>
+        </div>
+    );
+}
+
 // --- SMTP COMPONENT ---
 const SmtpSettings = ({ projectId }: { projectId: string }) => {
     const [config, setConfig] = useState({ host: "", port: 587, username: "", password: "", sender_email: "", enabled: false });
@@ -225,8 +253,11 @@ export const SettingsPage = () => {
 
             <div className="animate-fade-in">
                 {activeTab === "general" && (
-                    <div className="text-sm text-slate-600 p-4 border rounded bg-white">
-                        General organization settings (Timezone, Display Name, etc.) would go here.
+                    <div className="space-y-6">
+                        <div className="rounded-lg border border-slate-200 bg-white p-6">
+                            <h3 className="text-lg font-medium text-slate-900 mb-4">Database Configuration</h3>
+                            <DatabaseInfo />
+                        </div>
                     </div>
                 )}
                 {activeTab === "roles" && <RolesSettings />}

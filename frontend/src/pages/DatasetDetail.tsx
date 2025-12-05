@@ -45,13 +45,49 @@ export const DatasetDetailPage = () => {
         load();
     }
 
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files?.length || !id) return;
+        const file = e.target.files[0];
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const res = await api.post(`/api/datasets/${id}/upload`, formData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+            alert(`Imported ${res.data.count} examples.`);
+            load();
+        } catch (err) {
+            console.error(err);
+            alert("Failed to upload file.");
+        }
+        e.target.value = ""; // Reset input
+    };
+
     if (!dataset) return <Layout>Loading...</Layout>;
 
     return (
         <Layout>
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-slate-900">{dataset.name}</h1>
-                <p className="text-slate-600">{dataset.description}</p>
+            <div className="mb-6 flex justify-between items-start">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900">{dataset.name}</h1>
+                    <p className="text-slate-600">{dataset.description}</p>
+                </div>
+                <div>
+                    <input
+                        type="file"
+                        accept=".csv,.json"
+                        className="hidden"
+                        id="file-upload"
+                        onChange={handleFileUpload}
+                    />
+                    <label
+                        htmlFor="file-upload"
+                        className="cursor-pointer inline-flex items-center gap-2 rounded-md bg-white border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm"
+                    >
+                        <span>📥 Import CSV/JSON</span>
+                    </label>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8">
