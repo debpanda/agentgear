@@ -6,6 +6,9 @@ import { RunsPage } from "./pages/Runs";
 import { RunDetailPage } from "./pages/RunDetail";
 import { PromptsPage } from "./pages/Prompts";
 import { PromptDetailPage } from "./pages/PromptDetail";
+import { DashboardPage } from "./pages/Dashboard";
+import { ApiManagementPage } from "./pages/ApiManagement";
+import { GuidePage } from "./pages/Guide";
 import { AuthPage } from "./pages/Auth";
 import { useAuth } from "./lib/auth";
 
@@ -24,7 +27,23 @@ function App() {
         path="/"
         element={
           <RequireAuth>
-            <Navigate to="/projects" replace />
+            <DashboardPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/api-management"
+        element={
+          <RequireAuth>
+            <ApiManagementPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/guide"
+        element={
+          <RequireAuth>
+            <GuidePage />
           </RequireAuth>
         }
       />

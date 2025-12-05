@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, fetchAuthStatus, performLogin, performSetup } from "../lib/auth";
+import { Logo } from "../components/Logo";
 
 type Mode = "loading" | "setup" | "login";
 
@@ -57,7 +58,10 @@ export const AuthPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#eef2ff] to-[#f0f9ff] animate-gradient-slow flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="mb-6 text-center text-xs text-slate-500 tracking-wide">AgentGear v0.1 — Observability for AI Agents</div>
+        <div className="mb-8 flex justify-center">
+          <Logo className="w-16 h-16" />
+        </div>
+
         <div className="w-full rounded-2xl border border-white/20 bg-white/70 backdrop-blur-md shadow-xl p-8 md:p-10">
           <div className="mb-6 text-center">
             <div className="text-2xl font-semibold text-slate-900 tracking-tight">Welcome to AgentGear</div>

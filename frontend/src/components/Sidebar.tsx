@@ -3,9 +3,12 @@ import { ReactNode } from "react";
 import clsx from "clsx";
 
 const links = [
+  { to: "/", label: "Dashboard" },
   { to: "/projects", label: "Projects" },
   { to: "/runs", label: "Runs" },
-  { to: "/prompts", label: "Prompts" }
+  { to: "/prompts", label: "Prompts" },
+  { to: "/api-management", label: "API Management" },
+  { to: "/guide", label: "Guide" }
 ];
 
 export const Sidebar = () => {
