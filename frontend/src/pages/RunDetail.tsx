@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Layout } from "../components/Layout";
+import { DataTable } from "../components/DataTable";
+import { TraceGraph } from "../components/TraceGraph";
 import { api } from "../lib/api";
 
 type Run = {
@@ -23,10 +25,21 @@ type Score = {
   created_at: string;
 };
 
+type Span = {
+  id: string;
+  name: string;
+  parent_id?: string;
+  latency_ms?: number;
+  metadata?: Record<string, any>;
+  status?: string;
+};
+
 export const RunDetailPage = () => {
   const { id } = useParams();
   const [run, setRun] = useState<Run | null>(null);
   const [scores, setScores] = useState<Score[]>([]);
+  const [spans, setSpans] = useState<Span[]>([]);
+  const [activeTab, setActiveTab] = useState('Trace Details');
 
   // Scoring State
   const [showScoreModal, setShowScoreModal] = useState(false);
@@ -138,75 +151,110 @@ export const RunDetailPage = () => {
           </div>
         </div>
 
-        <div className="mt-6 grid gap-6">
-          {/* Input */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-2 font-semibold text-slate-900">Input</h3>
-            <div className="rounded-lg bg-slate-50 p-4 font-mono text-sm text-slate-700 whitespace-pre-wrap">
-              {run.input_text}
+        <div className="mt-6 border-b border-slate-200">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            {['Trace Details', 'Agent Graphs'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`
+                whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium
+                ${activeTab === tab
+                    ? 'border-brand-600 text-brand-600'
+                    : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'}
+              `}
+              >
+                {tab}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="mt-6">
+          {activeTab === 'Trace Details' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                  <h2 className="text-sm font-semibold text-slate-800">Input</h2>
+                  <pre className="mt-2 whitespace-pre-wrap text-sm text-slate-700 max-h-60 overflow-auto">
+                    {run.input_text || "N/A"}
+                  </pre>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                  <h2 className="text-sm font-semibold text-slate-800">Output</h2>
+                  <pre className="mt-2 whitespace-pre-wrap text-sm text-slate-700 max-h-60 overflow-auto">
+                    {run.output_text || "N/A"}
+                  </pre>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                <h3 className="text-sm font-semibold text-slate-800 mb-4">Spans Table</h3>
+                <DataTable
+                  data={spans}
+                  columns={[
+                    { key: "name", header: "Name" },
+                    { key: "parent_id", header: "Parent" },
+                    { key: "latency_ms", header: "Latency (ms)" },
+                    { key: "metadata", header: "Metadata", render: (row) => JSON.stringify(row.metadata || {}) }
+                  ]}
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'Agent Graphs' && (
+            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+              <TraceGraph spans={spans} />
+            </div>
+          )}
+        </div>
+
+        {/* Rate Modal */}
+        {showScoreModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
+              <h2 className="mb-4 text-lg font-semibold">Rate this Run</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Score (0.0 - 1.0)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="1"
+                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+                    value={newScore}
+                    onChange={(e) => setNewScore(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">Comment (Optional)</label>
+                  <textarea
+                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowScoreModal(false)}
+                  className="rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitScore}
+                  className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+                >
+                  Submit Score
+                </button>
+              </div>
             </div>
           </div>
-
-          {/* Output */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-2 font-semibold text-slate-900">Output</h3>
-            {run.error ? (
-              <div className="rounded-lg bg-red-50 p-4 font-mono text-sm text-red-700 whitespace-pre-wrap">
-                Error: {run.error}
-              </div>
-            ) : (
-              <div className="rounded-lg bg-green-50 p-4 font-mono text-sm text-slate-700 whitespace-pre-wrap">
-                {run.output_text}
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
-
-      {/* Rate Modal */}
-      {showScoreModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl">
-            <h2 className="mb-4 text-lg font-semibold">Rate this Run</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Score (0.0 - 1.0)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="1"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
-                  value={newScore}
-                  onChange={(e) => setNewScore(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Comment (Optional)</label>
-                <textarea
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => setShowScoreModal(false)}
-                className="rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={submitScore}
-                className="rounded-md bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
-              >
-                Submit Score
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </Layout>
   );
 };

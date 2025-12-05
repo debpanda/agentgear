@@ -25,7 +25,7 @@ class ProjectRead(ORMModel):
 
 class TokenCreate(BaseModel):
     scopes: List[str] = Field(
-        default_factory=lambda: ["runs.write", "prompts.read", "prompts.write", "tokens.manage"]
+        default_factory=lambda: ["runs.write", "prompts.read", "prompts.write", "tokens.manage", "datasets.read", "datasets.write", "evaluations.read", "evaluations.write"]
     )
 
 
