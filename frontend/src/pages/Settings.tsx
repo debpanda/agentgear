@@ -221,10 +221,142 @@ const RolesSettings = () => {
     );
 }
 
+// --- GIT COMPONENT ---
+const GitSettings = () => {
+    const [status, setStatus] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+    const [commitMsg, setCommitMsg] = useState("");
+    const [remoteUrl, setRemoteUrl] = useState("");
+    const [userName, setUserName] = useState("");
+    const [userEmail, setUserEmail] = useState("");
+
+    const loadStatus = async () => {
+        try {
+            const res = await api.get("/api/git/status");
+            setStatus(res.data);
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    useEffect(() => {
+        loadStatus();
+    }, []);
+
+    const initRepo = async () => {
+        setLoading(true);
+        try {
+            await api.post("/api/git/init");
+            loadStatus();
+        } catch (e) {
+            alert("Init failed");
+        }
+        setLoading(false);
+    };
+
+    const saveConfig = async () => {
+        setLoading(true);
+        try {
+            await api.post("/api/git/config", { remote_url: remoteUrl, user_name: userName, user_email: userEmail });
+            alert("Config saved");
+        } catch (e) {
+            alert("Config save failed");
+        }
+        setLoading(false);
+    };
+
+    const commit = async () => {
+        if (!commitMsg) return alert("Message required");
+        setLoading(true);
+        try {
+            const res = await api.post("/api/git/commit", { message: commitMsg });
+            alert(res.data.message);
+            setCommitMsg("");
+            loadStatus();
+        } catch (e) {
+            alert("Commit failed");
+        }
+        setLoading(false);
+    };
+
+    const push = async () => {
+        setLoading(true);
+        try {
+            const res = await api.post("/api/git/push");
+            alert("Push successful");
+        } catch (e: any) {
+            const msg = e.response?.data?.detail || "Push failed";
+            alert("Push failed: " + msg);
+        }
+        setLoading(false);
+    };
+
+    if (!status) return <div>Loading...</div>;
+
+    return (
+        <div className="space-y-6">
+            <div className="rounded-lg bg-blue-50 p-4 border border-blue-100 text-blue-800 text-sm">
+                <strong>Version Control:</strong> Sync your Prompts and Datasets to a Git repository.
+            </div>
+
+            {!status.initialized ? (
+                <div className="rounded border p-6 bg-white text-center">
+                    <p className="mb-4 text-slate-600">No git repository detected in the server root.</p>
+                    <button onClick={initRepo} disabled={loading} className="rounded bg-brand-600 px-4 py-2 text-white text-sm font-medium">Initialize Git Repo</button>
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    <div className="rounded border bg-white p-6">
+                        <h3 className="text-lg font-medium mb-4">Repository Status</h3>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>Branch: <span className="font-mono">{status.branch || "HEAD"}</span></div>
+                            <div>Changes pending: <span className={status.changed ? "text-orange-600 font-bold" : "text-green-600"}>{status.changed ? "Yes" : "No"}</span></div>
+                        </div>
+                        {status.status_text && <pre className="mt-4 p-2 bg-slate-100 rounded text-xs overflow-auto max-h-40">{status.status_text}</pre>}
+                    </div>
+
+                    <div className="rounded border bg-white p-6">
+                        <h3 className="text-lg font-medium mb-4">Configuration</h3>
+                        <div className="grid grid-cols-1 gap-4 mb-4">
+                            <input className="border rounded px-3 py-2 text-sm" placeholder="Remote URLs (e.g. https://github.com/user/repo.git)" value={remoteUrl} onChange={e => setRemoteUrl(e.target.value)} />
+                            <div className="grid grid-cols-2 gap-4">
+                                <input className="border rounded px-3 py-2 text-sm" placeholder="Git Username" value={userName} onChange={e => setUserName(e.target.value)} />
+                                <input className="border rounded px-3 py-2 text-sm" placeholder="Git Email" value={userEmail} onChange={e => setUserEmail(e.target.value)} />
+                            </div>
+                        </div>
+                        <button onClick={saveConfig} disabled={loading} className="rounded border border-slate-300 px-4 py-2 text-sm font-medium hover:bg-slate-50">Update Config</button>
+                    </div>
+
+                    <div className="rounded border bg-white p-6">
+                        <h3 className="text-lg font-medium mb-4">Sync</h3>
+                        <div className="flex gap-4 items-end">
+                            <input className="flex-1 border rounded px-3 py-2 text-sm" placeholder="Commit message (e.g. Updated prompts)" value={commitMsg} onChange={e => setCommitMsg(e.target.value)} />
+                            <button onClick={commit} disabled={loading} className="rounded bg-slate-900 text-white px-4 py-2 text-sm font-medium">Backup & Commit</button>
+                            <button onClick={push} disabled={loading} className="rounded bg-brand-600 text-white px-4 py-2 text-sm font-medium">Push to Remote</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 // --- MAIN PAGE ---
 export const SettingsPage = () => {
-    const { projectId } = useAuth();
-    const [activeTab, setActiveTab] = useState<Tab>("general");
+    const { projectId, role } = useAuth();
+    const isAdmin = role === "admin";
+    const [activeTab, setActiveTab] = useState<Tab | "git">("general");
+
+    const tabs = [
+        { id: "general", label: "General" },
+        { id: "roles", label: "Roles & Permissions" },
+        { id: "email", label: "Email / SMTP" },
+        { id: "alerts", label: "Alerts & Notifications" },
+    ];
+
+    if (isAdmin) {
+        tabs.push({ id: "git", label: "Version Control" });
+    }
 
     return (
         <Layout>
@@ -234,15 +366,10 @@ export const SettingsPage = () => {
             </div>
 
             <div className="flex border-b border-slate-200 mb-6">
-                {[
-                    { id: "general", label: "General" },
-                    { id: "roles", label: "Roles & Permissions" },
-                    { id: "email", label: "Email / SMTP" },
-                    { id: "alerts", label: "Alerts & Notifications" },
-                ].map(tab => (
+                {tabs.map(tab => (
                     <button
                         key={tab.id}
-                        onClick={() => setActiveTab(tab.id as Tab)}
+                        onClick={() => setActiveTab(tab.id as Tab | "git")}
                         className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? "border-brand-600 text-brand-700" : "border-transparent text-slate-500 hover:text-slate-700"
                             }`}
                     >
@@ -263,6 +390,7 @@ export const SettingsPage = () => {
                 {activeTab === "roles" && <RolesSettings />}
                 {activeTab === "email" && projectId && <SmtpSettings projectId={projectId} />}
                 {activeTab === "alerts" && projectId && <AlertsSettings projectId={projectId} />}
+                {activeTab === "git" && isAdmin && <GitSettings />}
             </div>
         </Layout>
     );

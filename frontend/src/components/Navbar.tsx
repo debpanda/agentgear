@@ -27,7 +27,7 @@ export const Navbar = ({ right }: { right?: ReactNode }) => {
         {username ? (
           <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
             <span className="h-2 w-2 rounded-full bg-green-500"></span>
-            <span className="text-xs font-medium text-slate-600">{username}</span>
+            <span className="text-xs font-medium text-slate-600">Welcome, {username}</span>
           </div>
         ) : null}
         <button

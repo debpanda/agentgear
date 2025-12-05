@@ -1,19 +1,66 @@
 # AgentGear
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/debpanda/agentgear/main/docs/assets/agentgear-logo.svg" alt="AgentGear logo" width="220" />
-</p>
+  <img src="https://raw.githubusercontent.com/debpanda/agentgear/main/docs/assets/agentgear-logo.svg" alt="# AgentGear
 
-AgentGear is an open-source, cloud-ready observability and prompt management platform for LLM-powered agents. It ships a Python SDK, FastAPI backend, React + Vite dashboard, and Typer CLI so you can log prompts, runs, spans, costs, and latency across modern frameworks (OpenAI Agent SDK, Google ADK, LangChain, LlamaIndex, LiteLLM, custom Python).
+![AgentGear](https://img.shields.io/pypi/v/agentgear-ai.svg) ![License](https://img.shields.io/badge/license-MIT-blue.svg)
+
+**AgentGear** is the all-in-one open-source platform for **LLM Observability, Prompt Engineering, and Agent Tracing**. It helps you debug, evaluate, and optimize your AI agents with a beautiful, locally hosted dashboard.
+
+## 🚀 Quick Start
+
+Get started in 30 seconds. No complex setup required.
+
+### 1. Install
+```bash
+pip install agentgear-ai
+```
+
+### 2. Run the UI
+```bash
+agentgear ui
+```
+The dashboard will open at http://localhost:8000.
 
 ---
 
-## Use Cases
-- **LLM observability**: capture runs, spans, errors, latency, and token/cost metrics for pipelines and agents.
-- **Prompt registry & versioning**: track prompt versions, metadata, and link runs back to prompt versions.
-- **Cost/latency budgeting**: monitor token usage and latency per run/prompt; export metrics via API.
-- **Multi-project isolation**: issue scoped API tokens per project for SDKs and CI.
-- **Self-hosted UI**: packaged React dashboard served by FastAPI (no Node required in production); use Node only if you want to develop the UI.
+## ✨ Features
+
+- **🔍 Agent Tracing**: Visualise your agent's thought process with interactive graphs.
+- **📝 Prompt Registry**: Version, tag, and test your prompts.
+- **🧪 Playground**: Experiment with different LLMs (OpenAI, Anthropic, Gemini, etc.) directly in the UI.
+- **📊 Datasets & Evaluations**: Upload test cases (CSV/JSON) and run LLM-as-a-Judge evaluators to catch regressions.
+- **📈 Metrics**: Track token usage, latency, and costs.
+- **🔒 Secure**: Runs locally on your machine. Your data stays with you.
+
+## 📚 Documentation
+
+For full documentation on how to instrument your code, visit the **[Documentation](http://localhost:8000/guide)** page within the dashboard.
+
+### Basic Instrumentation Example
+
+```python
+from agentgear import instrument, start_trace
+
+# 1. Initialize
+instrument(
+    project_id="my-project",
+    api_key="...", # Not needed for local dev
+)
+
+# 2. Decorate your functions
+@trace_span(name="generate_story")
+def generate_story(topic):
+    # Your LLM call here...
+    return "Once upon a time..."
+```
+
+## 🛠 Configuration
+
+AgentGear works out of the box, but you can configure it via environment variables:
+
+- `AGENTGEAR_DATABASE_URL`: Custom database path (default: `sqlite:///~/.agentgear/agentgear.db`)
+- `OPENAI_API_KEY`: Required for Playground and Evaluations.
 
 ---
 
