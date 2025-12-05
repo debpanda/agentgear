@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from agentgear.server.app.api import auth, metrics, projects, prompts, runs, spans, tokens, users, llm_models, seed, settings as settings_api
+from agentgear.server.app.api import auth, metrics, projects, prompts, runs, spans, tokens, users, llm_models, seed, settings as settings_api, datasets, evaluations
 from agentgear.server.app.auth import TokenAuthMiddleware
 from agentgear.server.app.config import VersionInfo, get_settings
 from agentgear.server.app.db import Base, engine
@@ -38,6 +38,8 @@ def create_app() -> FastAPI:
     app.include_router(llm_models.router)
     app.include_router(settings_api.router)
     app.include_router(seed.router)
+    app.include_router(datasets.router)
+    app.include_router(evaluations.router)
 
     @app.get("/api/health")
     def health():

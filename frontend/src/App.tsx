@@ -13,6 +13,8 @@ import { UsersPage } from "./pages/Users";
 import { ModelsPage } from "./pages/Models";
 import { SettingsPage } from "./pages/Settings";
 import { AuthPage } from "./pages/Auth";
+import { DatasetsPage } from "./pages/Datasets";
+import { DatasetDetailPage } from "./pages/DatasetDetail";
 import { useAuth } from "./lib/auth";
 
 const RequireAuth = ({ children }: { children: JSX.Element }) => {
@@ -127,6 +129,22 @@ function App() {
         element={
           <RequireAuth>
             <PromptDetailPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/datasets"
+        element={
+          <RequireAuth>
+            <DatasetsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/datasets/:id"
+        element={
+          <RequireAuth>
+            <DatasetDetailPage />
           </RequireAuth>
         }
       />

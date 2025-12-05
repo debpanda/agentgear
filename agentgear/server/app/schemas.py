@@ -265,3 +265,61 @@ class RoleRead(BaseModel):
     name: str
     permissions: List[str]
 
+
+# --- NEW SCHEMAS FOR DATASETS & EVALUATIONS ---
+
+class DatasetCreate(BaseModel):
+    project_id: str
+    name: str
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
+    metadata: Optional[dict[str, Any]] = None
+
+class DatasetRead(ORMModel):
+    id: str
+    project_id: str
+    name: str
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
+    metadata: Optional[dict[str, Any]] = Field(default=None, alias="metadata_")
+    created_at: datetime
+
+class DatasetExampleCreate(BaseModel):
+    input_text: Optional[str] = None
+    expected_output: Optional[str] = None
+    metadata: Optional[dict[str, Any]] = None
+
+class DatasetExampleRead(ORMModel):
+    id: str
+    dataset_id: str
+    input_text: Optional[str] = None
+    expected_output: Optional[str] = None
+    metadata: Optional[dict[str, Any]] = Field(default=None, alias="metadata_")
+    created_at: datetime
+
+class EvaluationCreate(BaseModel):
+    project_id: str
+    trace_id: Optional[str] = None
+    run_id: Optional[str] = None
+    span_id: Optional[str] = None
+    evaluator_type: str = "manual"
+    score: Optional[float] = None
+    max_score: Optional[float] = None
+    passed: Optional[bool] = None
+    comments: Optional[str] = None
+    metadata: Optional[dict[str, Any]] = None
+
+class EvaluationRead(ORMModel):
+    id: str
+    project_id: str
+    trace_id: Optional[str]
+    run_id: Optional[str]
+    span_id: Optional[str]
+    evaluator_type: str
+    score: Optional[float]
+    max_score: Optional[float]
+    passed: Optional[bool]
+    comments: Optional[str]
+    metadata: Optional[dict[str, Any]] = Field(default=None, alias="metadata_")
+    created_at: datetime
+

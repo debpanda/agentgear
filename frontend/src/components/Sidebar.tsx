@@ -13,13 +13,14 @@ export const Sidebar = () => {
         <div className="text-lg font-semibold text-brand-700 flex items-center gap-2">
           <span>⚙️</span> AgentGear
         </div>
-        <div className="text-xs text-slate-500 font-medium ml-8">v0.1.9</div>
+        <div className="text-xs text-slate-500 font-medium ml-8">v0.1.10</div>
       </div>
       <nav className="mt-2 space-y-1">
         <NavItem to="/">Dashboard</NavItem>
         <NavItem to="/projects">Projects</NavItem>
         <NavItem to="/runs">Runs</NavItem>
         <NavItem to="/prompts">Prompt Registry</NavItem>
+        <NavItem to="/datasets">Datasets</NavItem>
 
         {isAdmin && (
           <>
@@ -29,7 +30,7 @@ export const Sidebar = () => {
           </>
         )}
 
-        <NavItem to="/guide">Guide</NavItem>
+        <NavItem to="/guide">Documentation</NavItem>
       </nav>
     </aside>
   );
