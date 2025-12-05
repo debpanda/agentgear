@@ -9,6 +9,9 @@ import { PromptDetailPage } from "./pages/PromptDetail";
 import { DashboardPage } from "./pages/Dashboard";
 import { ApiManagementPage } from "./pages/ApiManagement";
 import { GuidePage } from "./pages/Guide";
+import { UsersPage } from "./pages/Users";
+import { ModelsPage } from "./pages/Models";
+import { SettingsPage } from "./pages/Settings";
 import { AuthPage } from "./pages/Auth";
 import { useAuth } from "./lib/auth";
 
@@ -44,6 +47,30 @@ function App() {
         element={
           <RequireAuth>
             <GuidePage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          <RequireAuth>
+            <UsersPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/models"
+        element={
+          <RequireAuth>
+            <ModelsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <RequireAuth>
+            <SettingsPage />
           </RequireAuth>
         }
       />

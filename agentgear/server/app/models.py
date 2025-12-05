@@ -33,6 +33,13 @@ class Project(Base):
     prompts = relationship("Prompt", back_populates="project", cascade="all, delete-orphan")
     tokens = relationship("APIKey", back_populates="project", cascade="all, delete-orphan")
     runs = relationship("Run", back_populates="project", cascade="all, delete-orphan")
+    users = relationship("User", back_populates="project")
+    traces = relationship("Trace", back_populates="project", cascade="all, delete-orphan")
+    datasets = relationship("Dataset", back_populates="project", cascade="all, delete-orphan")
+    evaluations = relationship("Evaluation", back_populates="project", cascade="all, delete-orphan")
+    smtp_settings = relationship("SMTPSettings", back_populates="project", cascade="all, delete-orphan", uselist=False)
+    alert_rules = relationship("AlertRule", back_populates="project", cascade="all, delete-orphan")
+    metric_aggregates = relationship("MetricAggregate", back_populates="project", cascade="all, delete-orphan")
 
 
 class APIKey(Base):
@@ -42,6 +49,7 @@ class APIKey(Base):
     project_id = Column(String, ForeignKey("projects.id"), nullable=False, index=True)
     key_hash = Column(String, nullable=False, unique=True, index=True)
     scopes = Column(JSON, nullable=False, default=list)
+    role = Column(String, default="user", nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     revoked = Column(Boolean, default=False, nullable=False)
     last_used_at = Column(DateTime(timezone=True), nullable=True)
@@ -56,6 +64,8 @@ class Prompt(Base):
     project_id = Column(String, ForeignKey("projects.id"), nullable=False, index=True)
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
+    scope = Column(String, default="project", nullable=False)  # global vs project
+    tags = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     project = relationship("Project", back_populates="prompts")
@@ -98,7 +108,7 @@ class Trace(Base):
     metadata_ = Column("metadata", JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    project = relationship("Project")
+    project = relationship("Project", back_populates="traces")
     prompt_version = relationship("PromptVersion")
 
 
@@ -166,14 +176,37 @@ class User(Base):
 
     id = Column(String, primary_key=True, default=_uuid)
     project_id = Column(String, ForeignKey("projects.id"), nullable=True, index=True)
-    email = Column(String, unique=True, nullable=False, index=True)
+    username = Column(String, unique=True, nullable=False, index=True)
+    email = Column(String, unique=True, nullable=True)
     password_hash = Column(String, nullable=False)
     salt = Column(String, nullable=False)
-    role = Column(String, nullable=True)
+    role = Column(String, default="user", nullable=False)  # admin, user
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    # can access multiple projects? For now, simplistic single project or global admin
+    
+    project = relationship("Project", back_populates="users")
+
+
+class LLMModel(Base):
+    __tablename__ = "llm_models"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    name = Column(String, nullable=False)
+    provider = Column(String, nullable=False) # openai, anthropic, etc.
+    api_key = Column(String, nullable=True) # encrypted/masked? Storing raw for now for simplicity in this task
+    base_url = Column(String, nullable=True)
+    config = Column(JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    project = relationship("Project")
 
+class AdminUser(Base):
+    __tablename__ = "admin_users"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    username = Column(String, unique=True, nullable=False, index=True)
+    password_hash = Column(String, nullable=False)
+    salt = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 class Evaluation(Base):
     __tablename__ = "evaluations"
@@ -191,7 +224,7 @@ class Evaluation(Base):
     metadata_ = Column("metadata", JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    project = relationship("Project")
+    project = relationship("Project", back_populates="evaluations")
     trace = relationship("Trace")
     run = relationship("Run")
     span = relationship("Span")
@@ -208,7 +241,7 @@ class Dataset(Base):
     metadata_ = Column("metadata", JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    project = relationship("Project")
+    project = relationship("Project", back_populates="datasets")
     examples = relationship("DatasetExample", back_populates="dataset", cascade="all, delete-orphan")
 
 
@@ -240,7 +273,7 @@ class SMTPSettings(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
-    project = relationship("Project")
+    project = relationship("Project", back_populates="smtp_settings")
 
 
 class AlertRule(Base):
@@ -257,7 +290,7 @@ class AlertRule(Base):
     metadata_ = Column("metadata", JSON, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    project = relationship("Project")
+    project = relationship("Project", back_populates="alert_rules")
 
 
 class AlertEvent(Base):
@@ -289,14 +322,4 @@ class MetricAggregate(Base):
     values = Column(JSON, nullable=True)  # e.g., avg, p95, p99, count, sum
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    project = relationship("Project")
-
-
-class AdminUser(Base):
-    __tablename__ = "admin_users"
-
-    id = Column(String, primary_key=True, default=_uuid)
-    username = Column(String, unique=True, nullable=False, index=True)
-    password_hash = Column(String, nullable=False)
-    salt = Column(String, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    project = relationship("Project", back_populates="metric_aggregates")

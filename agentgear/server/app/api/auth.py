@@ -24,19 +24,26 @@ def _ensure_default_project(db: Session) -> Project:
     return project
 
 
-def _issue_token(db: Session, project: Project) -> str:
+def _issue_token(db: Session, project: Project, role: str = "user") -> str:
     raw, hashed = generate_token()
     scopes = ["runs.write", "prompts.read", "prompts.write", "tokens.manage"]
-    record = APIKey(project_id=project.id, key_hash=hashed, scopes=scopes)
+    record = APIKey(project_id=project.id, key_hash=hashed, scopes=scopes, role=role)
     db.add(record)
     db.commit()
     return raw
 
 
-def _login_success(db: Session, username: str) -> schemas.AuthResponse:
-    project = _ensure_default_project(db)
-    token = _issue_token(db, project)
-    return schemas.AuthResponse(token=token, project_id=project.id, username=username)
+def _login_success(db: Session, username: str, role: str = "user", project_id: str | None = None) -> schemas.AuthResponse:
+    if project_id:
+        project = db.query(Project).filter(Project.id == project_id).first()
+        if not project:
+            # Fallback if specific project ID not found (shouldn't happen for valid users, but safety)
+            project = _ensure_default_project(db)
+    else:
+        project = _ensure_default_project(db)
+            
+    token = _issue_token(db, project, role)
+    return schemas.AuthResponse(token=token, project_id=project.id, username=username, role=role)
 
 
 @router.get("/status", response_model=schemas.AuthStatus)
@@ -69,7 +76,7 @@ def setup_admin(payload: schemas.AuthSetup, db: Session = Depends(get_db)):
     admin = AdminUser(username=payload.username, password_hash=password_hash, salt=salt)
     db.add(admin)
     db.commit()
-    return _login_success(db, payload.username)
+    return _login_success(db, payload.username, role="admin")
 
 
 @router.post("/login", response_model=schemas.AuthResponse)
@@ -79,11 +86,18 @@ def login(payload: schemas.AuthLogin, db: Session = Depends(get_db)):
     if env_mode:
         if payload.username != settings.admin_username or payload.password != settings.admin_password:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-        return _login_success(db, settings.admin_username)
+        return _login_success(db, settings.admin_username, role="admin")
 
     admin: Optional[AdminUser] = db.query(AdminUser).filter(AdminUser.username == payload.username).first()
-    if not admin:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    if hash_password(payload.password, admin.salt) != admin.password_hash:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    return _login_success(db, admin.username)
+    if admin:
+        if hash_password(payload.password, admin.salt) == admin.password_hash:
+             return _login_success(db, admin.username, role="admin")
+    
+    # Check standard users
+    from agentgear.server.app.models import User
+    user: Optional[User] = db.query(User).filter(User.username == payload.username).first()
+    if user:
+        if hash_password(payload.password, user.salt) == user.password_hash:
+            return _login_success(db, user.username, role=user.role, project_id=user.project_id)
+
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")

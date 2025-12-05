@@ -3,6 +3,7 @@ from typing import Any, List, Optional, Literal
 
 from pydantic import BaseModel, Field
 
+# ... (Previous schemas) ...
 
 class ORMModel(BaseModel):
     class Config:
@@ -45,8 +46,16 @@ class PromptCreate(BaseModel):
     project_id: str
     name: str
     description: Optional[str] = None
+    scope: Optional[str] = "project"
     content: str
+    tags: Optional[List[str]] = None
     metadata: Optional[dict[str, Any]] = None
+
+
+class PromptUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
 
 
 class PromptVersionCreate(BaseModel):
@@ -59,6 +68,8 @@ class PromptRead(ORMModel):
     project_id: str
     name: str
     description: Optional[str] = None
+    scope: str
+    tags: Optional[List[str]] = None
     created_at: datetime
 
 
@@ -75,6 +86,23 @@ class TokenUsage(BaseModel):
     prompt: Optional[int] = None
     completion: Optional[int] = None
     total: Optional[int] = None
+
+
+class PromptRunRequest(BaseModel):
+    version_id: Optional[str] = None # if None, latest
+    inputs: dict[str, str] = {}
+    model_config_name: Optional[str] = None # ID or name of LLMModel
+    stream: bool = False
+
+
+class PromptRunResponse(BaseModel):
+    output: str
+    error: Optional[str] = None
+    latency_ms: float
+    token_usage: Optional[TokenUsage] = None
+
+
+
 
 
 class RunCreate(BaseModel):
@@ -157,3 +185,83 @@ class AuthResponse(BaseModel):
     token: str
     project_id: str
     username: str
+    role: str = "user"
+
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    email: Optional[str] = None
+    project_id: Optional[str] = None
+    role: str = "user"
+
+
+class UserRead(ORMModel):
+    id: str
+    username: str
+    email: Optional[str]
+    project_id: Optional[str]
+    role: str
+    created_at: datetime
+
+
+class UserPasswordReset(BaseModel):
+    password: str
+
+
+class LLMModelCreate(BaseModel):
+    name: str
+    provider: str
+    api_key: Optional[str] = None
+    base_url: Optional[str] = None
+    config: Optional[dict[str, Any]] = None
+
+
+class LLMModelRead(ORMModel):
+    id: str
+    name: str
+    provider: str
+    base_url: Optional[str]
+    config: Optional[dict[str, Any]]
+    created_at: datetime
+
+# --- NEW SCHEMAS FOR SETTINGS ---
+
+class AlertRuleCreate(BaseModel):
+    project_id: str
+    metric: str
+    threshold: float
+    operator: str = ">"
+    window_minutes: int = 5
+    recipients: List[str]  # List of emails
+    enabled: bool = True
+
+class AlertRuleRead(ORMModel):
+    id: str
+    project_id: str
+    metric: str
+    threshold: float
+    operator: str
+    window_minutes: int
+    recipients: Optional[List[str]]
+    enabled: bool
+    created_at: datetime
+
+class SMTPConfig(BaseModel):
+    host: str
+    port: int
+    username: Optional[str] = None
+    password: Optional[str] = None
+    encryption: Optional[str] = None
+    sender_email: Optional[str] = None
+    enabled: bool = True
+
+class RoleCreate(BaseModel):
+    name: str
+    permissions: List[str]
+
+class RoleRead(BaseModel):
+    id: str
+    name: str
+    permissions: List[str]
+

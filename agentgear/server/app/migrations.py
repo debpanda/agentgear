@@ -63,4 +63,12 @@ def apply_migrations(engine: Engine) -> None:
         _add_column_if_missing(conn, "spans", "error", "TEXT", cache)
         _add_column_if_missing(conn, "spans", "error_stack", "TEXT", cache)
         _add_column_if_missing(conn, "spans", "tags", "JSON", cache)
+        _add_column_if_missing(conn, "spans", "tags", "JSON", cache)
         _create_index_if_missing(conn, "ix_spans_trace_id", "spans", "trace_id")
+
+        # Prompts: add scope and tags
+        _add_column_if_missing(conn, "prompts", "scope", "VARCHAR", cache)
+        _add_column_if_missing(conn, "prompts", "tags", "JSON", cache)
+
+        # APIKeys: add role
+        _add_column_if_missing(conn, "api_keys", "role", "VARCHAR", cache)

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from agentgear.server.app import schemas
@@ -39,7 +39,15 @@ SAMPLE_PROMPTS = [
 
 
 @router.post("", response_model=schemas.ProjectRead, status_code=status.HTTP_201_CREATED)
-def create_project(payload: schemas.ProjectCreate, db: Session = Depends(get_db)):
+def create_project(
+    payload: schemas.ProjectCreate,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    # RBAC: Only admin can create projects
+    if not hasattr(request.state, "role") or request.state.role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+
     existing = db.query(Project).filter(Project.name == payload.name).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Project name exists")

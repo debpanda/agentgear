@@ -40,7 +40,7 @@ export const AuthPage = () => {
     try {
       const res =
         mode === "setup" ? await performSetup(username, password) : await performLogin(username, password);
-      login(res.token, res.project_id, res.username);
+      login(res.token, res.project_id, res.username, res.role);
       navigate("/projects");
     } catch (err: any) {
       setError(err?.response?.data?.detail || "Unable to authenticate");

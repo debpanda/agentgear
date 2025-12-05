@@ -71,18 +71,31 @@ export const DashboardPage = () => {
             </div>
 
             {/* Tip of the day */}
-            <div className="mb-8 rounded-lg border border-blue-100 bg-blue-50 p-4 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-                <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 text-blue-600 mt-0.5">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <div className="mb-8 rounded-xl border border-blue-100 bg-blue-50 p-4 animate-slide-up" style={{ animationDelay: "0.2s" }}>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 text-blue-600 mt-0.5">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-semibold text-blue-900">Pro Tip</h3>
+                            <p className="text-sm text-blue-700 mt-1">
+                                Did you know you can version your prompts? Use the SDK to register prompt versions.
+                                Check out the <Link to="/guide" className="underline hover:text-blue-900">Documentation</Link>.
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 className="text-sm font-semibold text-blue-900">Pro Tip</h3>
-                        <p className="text-sm text-blue-700 mt-1">
-                            Did you know you can version your prompts? Use the SDK to register prompt versions and roll back instantly if needed.
-                            Check out the <Link to="/guide" className="underline hover:text-blue-900">Documentation</Link> for examples.
-                        </p>
-                    </div>
+                    {stats.projects === 0 && (
+                        <button
+                            onClick={async () => {
+                                api.post("/api/seed");
+                                window.location.reload();
+                            }}
+                            className="hidden sm:block whitespace-nowrap rounded bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 shadow-sm transition-colors"
+                        >
+                            + Load Example Data
+                        </button>
+                    )}
                 </div>
             </div>
 

@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException, Request, status
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from agentgear.server.app.config import get_settings
@@ -34,7 +35,7 @@ class TokenAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
         # Allow unauthenticated access for non-API routes and auth endpoints
-        if not path.startswith("/api") or path.startswith("/api/auth"):
+        if not path.startswith("/api") or path.startswith("/api/auth") or path.startswith("/api/seed"):
             response = await call_next(request)
             return response
         if self.settings.local_mode:
@@ -49,14 +50,14 @@ class TokenAuthMiddleware(BaseHTTPMiddleware):
             if self.settings.local_mode:
                 response = await call_next(request)
                 return response
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing API key")
+            return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": "Missing API key"})
 
         token_hash = hash_token(token_value)
         db = SessionLocal()
         try:
             api_key: Optional[APIKey] = db.query(APIKey).filter(APIKey.key_hash == token_hash).first()
             if not api_key or api_key.revoked:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key")
+                return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": "Invalid API key"})
 
             project: Optional[Project] = (
                 db.query(Project).filter(Project.id == api_key.project_id).first()
@@ -64,13 +65,14 @@ class TokenAuthMiddleware(BaseHTTPMiddleware):
                 else None
             )
             if not project:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Project not found")
+                return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": "Project not found"})
 
             api_key.last_used_at = datetime.utcnow()
             db.add(api_key)
             db.commit()
             request.state.project_id = project.id
             request.state.token_scopes = api_key.scopes or []
+            request.state.role = api_key.role or "user"
         finally:
             db.close()
 

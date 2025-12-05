@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = import.meta.env.VITE_AGENTGEAR_API ?? "http://localhost:8000";
+const baseURL = import.meta.env.VITE_AGENTGEAR_API ?? (import.meta.env.DEV ? "http://localhost:8000" : "");
 const TOKEN_KEY = "agentgear_token";
 
 export const api = axios.create({

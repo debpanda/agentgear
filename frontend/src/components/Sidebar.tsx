@@ -1,26 +1,35 @@
 import { NavLink } from "react-router-dom";
 import { ReactNode } from "react";
 import clsx from "clsx";
-
-const links = [
-  { to: "/", label: "Dashboard" },
-  { to: "/projects", label: "Projects" },
-  { to: "/runs", label: "Runs" },
-  { to: "/prompts", label: "Prompts" },
-  { to: "/api-management", label: "API Management" },
-  { to: "/guide", label: "Guide" }
-];
+import { useAuth } from "../lib/auth";
 
 export const Sidebar = () => {
+  const { role } = useAuth();
+  const isAdmin = role === "admin";
+
   return (
     <aside className="w-60 border-r border-slate-200 bg-white">
-      <div className="px-4 py-4 text-lg font-semibold text-brand-700">AgentGear</div>
+      <div className="px-4 py-4">
+        <div className="text-lg font-semibold text-brand-700 flex items-center gap-2">
+          <span>⚙️</span> AgentGear
+        </div>
+        <div className="text-xs text-slate-500 font-medium ml-8">v0.1.9</div>
+      </div>
       <nav className="mt-2 space-y-1">
-        {links.map((link) => (
-          <NavItem key={link.to} to={link.to}>
-            {link.label}
-          </NavItem>
-        ))}
+        <NavItem to="/">Dashboard</NavItem>
+        <NavItem to="/projects">Projects</NavItem>
+        <NavItem to="/runs">Runs</NavItem>
+        <NavItem to="/prompts">Prompt Registry</NavItem>
+
+        {isAdmin && (
+          <>
+            <NavItem to="/api-management">API Management</NavItem>
+            <NavItem to="/users">Users</NavItem>
+            <NavItem to="/models">Models</NavItem>
+          </>
+        )}
+
+        <NavItem to="/guide">Guide</NavItem>
       </nav>
     </aside>
   );
