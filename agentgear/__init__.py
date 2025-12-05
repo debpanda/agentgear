@@ -12,7 +12,8 @@ from agentgear.sdk.client import AgentGearClient
 from agentgear.sdk.decorators import observe
 from agentgear.sdk.trace import trace
 from agentgear.sdk.prompt import Prompt
+from agentgear.version import get_version
 
-__version__ = "0.1.9"
+__version__ = get_version()
 
 __all__ = ["AgentGearClient", "observe", "trace", "Prompt", "__version__"]

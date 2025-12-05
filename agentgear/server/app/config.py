@@ -2,6 +2,8 @@ from functools import lru_cache
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from agentgear.version import get_version
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="AGENTGEAR_", env_file=".env", env_file_encoding="utf-8")
@@ -17,7 +19,7 @@ class Settings(BaseSettings):
 
 
 class VersionInfo(BaseModel):
-    version: str = "0.1.9"
+    version: str = get_version()
     name: str = "AgentGear"
 
 

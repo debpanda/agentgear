@@ -1,11 +1,20 @@
 import { NavLink } from "react-router-dom";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import clsx from "clsx";
 import { useAuth } from "../lib/auth";
+import { api } from "../lib/api";
 
 export const Sidebar = () => {
   const { role } = useAuth();
   const isAdmin = role === "admin";
+  const [version, setVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .get<{ version?: string }>("/api/health")
+      .then((response) => setVersion(response.data?.version ?? null))
+      .catch(() => setVersion(null));
+  }, []);
 
   return (
     <aside className="w-60 border-r border-slate-200 bg-white">
@@ -13,7 +22,7 @@ export const Sidebar = () => {
         <div className="text-lg font-semibold text-brand-700 flex items-center gap-2">
           <span>⚙️</span> AgentGear
         </div>
-        <div className="text-xs text-slate-500 font-medium ml-8">v0.1.18</div>
+        <div className="text-xs text-slate-500 font-medium ml-8">v{version ?? "dev"}</div>
       </div>
       <nav className="mt-2 space-y-1">
         <NavItem to="/">Dashboard</NavItem>
